@@ -1,0 +1,30 @@
+name: Build
+
+on: [push]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        perl-version:
+          - '5.32'
+
+    container:
+      image: perldocker/perl-tester:${{ matrix.perl-version }}
+
+    steps:
+      - uses: actions/checkout@main
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: perl -V
+      - run: cpanm --notest --installdeps --verbose .
+      - run: make check_raid.pl
+
+      - name: 'Uploading fat-packed check_raid.pl'
+        uses: actions/upload-artifact@v3
+        with:
+          name: check_raid.pl
+          path: check_raid.pl
+          retention-days: 5
